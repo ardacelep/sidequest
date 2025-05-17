@@ -44,8 +44,8 @@ public class SecurityConfig {
 //                                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 //
 //                                // Auth endpoints
-//                                .requestMatchers("/api/auth/login").permitAll()
-//                                .requestMatchers("/api/auth/register").permitAll()
+                                .requestMatchers("/api/auth/login").permitAll()
+                                .requestMatchers("/api/auth/register/**").permitAll()
 //
 //                                // Event endpoints
 //                                .requestMatchers("/api/events/addEvent").hasAnyRole("ADMIN")

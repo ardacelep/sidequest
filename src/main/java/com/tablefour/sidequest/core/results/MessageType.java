@@ -14,7 +14,6 @@ public enum MessageType {
     UPDATED("UPDATED", "Data was successfully updated in the database."),
     DELETED("DELETED", "Data was successfully deleted from the database."),;
 
-
     @JsonProperty("name")
     private final String name;
 
@@ -27,4 +26,3 @@ public enum MessageType {
     }
 
 }
-

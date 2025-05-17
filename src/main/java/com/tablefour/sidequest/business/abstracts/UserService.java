@@ -4,9 +4,9 @@ import com.tablefour.sidequest.core.results.DataResult;
 import com.tablefour.sidequest.core.results.Result;
 import com.tablefour.sidequest.entities.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import java.util.UUID;
 
 public interface UserService extends UserDetailsService {
-
 
     DataResult<User> getUserById(String userId);
 
@@ -19,4 +19,3 @@ public interface UserService extends UserDetailsService {
     DataResult<User> getAuthenticatedUser();
 
 }
-

@@ -24,7 +24,7 @@ public class GetUserEmployerDto {
 
     private Gender gender;
 
-    private float rating;
+    private double rating;
 
     private Set<Rating> receivedRatings;
 

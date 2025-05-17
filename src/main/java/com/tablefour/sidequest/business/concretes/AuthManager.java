@@ -56,8 +56,6 @@ public class AuthManager implements AuthService {
             return new ErrorDataResult<>(Messages.passwordCannotBeNull, HttpStatus.BAD_REQUEST);
         }
 
-
-
         var userResult = userService.getUserByEmail(user.getEmail());
 
         if(!userResult.isSuccess()){
@@ -82,6 +80,8 @@ public class AuthManager implements AuthService {
 
         userEmployee.setPassword(passwordEncoder.encode(userEmployee.getPassword()));
 
+        userEmployeeDao.save(userEmployee);
+
         BeanUtils.copyProperties(userEmployee, getUserEmployeeDto);
 
         return getUserEmployeeDto;
@@ -92,6 +92,7 @@ public class AuthManager implements AuthService {
 
         GetUserEmployerDto getUserEmployerDto = new GetUserEmployerDto();
         userEmployer.setPassword(passwordEncoder.encode(userEmployer.getPassword()));
+        userEmployerDao.save(userEmployer);
         BeanUtils.copyProperties(userEmployer, getUserEmployerDto);
         return getUserEmployerDto;
     }

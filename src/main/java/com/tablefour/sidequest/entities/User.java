@@ -25,15 +25,15 @@ public class User implements UserDetails {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    private String id_card_number;
+    private String idCardNumber;
     private String firstName;
     private String lastName;
     private String password;
     private String phoneNumber;
     private String email;
 
+    @Enumerated(EnumType.STRING)
     private Gender gender;
-
 
     @ElementCollection(targetClass = Role.class, fetch = FetchType.EAGER)
     @JoinTable(name = "authorities", joinColumns = @JoinColumn(name = "user_id"))
@@ -53,7 +53,7 @@ public class User implements UserDetails {
         return email;
     }
 
-    public boolean isRestricted(){
+    public boolean isRestricted() {
         return restrictedUntil.isAfter(LocalDate.now());
     }
 
@@ -63,12 +63,26 @@ public class User implements UserDetails {
     @OneToMany(mappedBy = "raterUser", cascade = CascadeType.ALL)
     private Set<Rating> givenRatings;
 
-    @Formula("(SELECT AVG(r.value) FROM ratings r WHERE r.rated_user_id = user_id)")
-    private float rating;
+    @Formula("(SELECT COALESCE(AVG(r.value), 0.0) FROM application.ratings r WHERE r.rated_user_id = id)")
+    private double rating;
 
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
 
-    @Override public boolean isAccountNonExpired() { return true; }
-    @Override public boolean isAccountNonLocked() { return true; }
-    @Override public boolean isCredentialsNonExpired() { return true; }
-    @Override public boolean isEnabled() { return true; }
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return true;
+    }
 }

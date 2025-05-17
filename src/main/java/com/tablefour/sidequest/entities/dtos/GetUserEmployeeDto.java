@@ -24,7 +24,7 @@ public class GetUserEmployeeDto {
     private String email;
     private String university;
     private LocalDate birthDate;
-    private float rating;
+    private double rating;
     private int completedJobs;
 
     private Gender gender;

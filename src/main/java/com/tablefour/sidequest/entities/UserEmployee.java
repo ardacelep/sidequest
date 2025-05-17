@@ -13,7 +13,6 @@ import java.util.Set;
 @AllArgsConstructor
 @PrimaryKeyJoinColumn(name = "user_id")
 @Table(name = "user_employees")
-@Builder
 public class UserEmployee extends User {
 
     private String university;

@@ -12,7 +12,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @NoArgsConstructor
 public class AddUserEmployeeDto {
-    private String id_card_number;
+    private String idCardNumber;
     private String firstName;
     private String lastName;
     private String password;

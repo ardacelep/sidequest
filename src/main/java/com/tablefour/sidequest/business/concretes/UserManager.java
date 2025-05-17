@@ -28,7 +28,7 @@ public class UserManager implements UserService {
     }
 
     @Override
-    public UserDetails loadUserByUsername(String username){
+    public UserDetails loadUserByUsername(String username) {
         return getUserByEmail(username).getData();
     }
 
@@ -36,7 +36,7 @@ public class UserManager implements UserService {
     public DataResult<User> getUserById(String userId) {
         var result = userDao.findById(UUID.fromString(userId));
 
-        if (result.isEmpty()){
+        if (result.isEmpty()) {
             return new ErrorDataResult<>(Messages.userNotFound, HttpStatus.NOT_FOUND);
         }
 
@@ -48,7 +48,7 @@ public class UserManager implements UserService {
     public DataResult<User> getUserByEmail(String email) {
         var result = userDao.findByEmail(email);
 
-        if (result.isEmpty()){
+        if (result.isEmpty()) {
             return new ErrorDataResult<>(Messages.userNotFound, HttpStatus.NOT_FOUND);
         }
 
@@ -60,7 +60,7 @@ public class UserManager implements UserService {
 
         var result = userDao.findByPhoneNumber(phoneNumber);
 
-        if (result.isEmpty()){
+        if (result.isEmpty()) {
             return new ErrorDataResult<>(Messages.userNotFound, HttpStatus.NOT_FOUND);
         }
 
@@ -83,6 +83,5 @@ public class UserManager implements UserService {
         String userMail = authentication.getName();
         return getUserByEmail(userMail);
     }
-
 
 }
