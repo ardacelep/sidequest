@@ -22,7 +22,8 @@ public enum ErrorMessageType {
     INVALID_TOKEN("INVALID_TOKEN", "The token is not valid."),
     EXPIRED_TOKEN("EXPIRED_TOKEN", "The token is expired."),
     INVALID_CREDENTIALS("INVALID_CREDENTIALS", "The credentials are not valid."),
-    ERROR("ERROR", "An error occured.");
+    ERROR("ERROR", "An error occured."),
+    INVALID_REQUEST("INVALID_REQUEST", "The request is invalid.");
 
     @JsonProperty("name")
     private final String name;

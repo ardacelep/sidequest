@@ -30,4 +30,27 @@ public interface JobPostingDao extends JpaRepository<JobPosting, UUID> {
     Page<JobPosting> findByPaymentGreaterThanEqual(double minPayment, Pageable pageable);
 
     Page<JobPosting> findByLocationContainingIgnoreCase(String location, Pageable pageable);
+
+    Page<JobPosting> findByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase(
+            String titleKeyword, String descriptionKeyword, Pageable pageable);
+
+    // Date-based search methods
+    Page<JobPosting> findByStartDate(LocalDateTime date, Pageable pageable);
+
+    Page<JobPosting> findByEndDate(LocalDateTime date, Pageable pageable);
+
+    Page<JobPosting> findByStartDateBefore(LocalDateTime date, Pageable pageable);
+
+    Page<JobPosting> findByStartDateAfter(LocalDateTime date, Pageable pageable);
+
+    Page<JobPosting> findByEndDateBefore(LocalDateTime date, Pageable pageable);
+
+    Page<JobPosting> findByEndDateAfter(LocalDateTime date, Pageable pageable);
+
+    Page<JobPosting> findByStartDateBetween(LocalDateTime startDate, LocalDateTime endDate, Pageable pageable);
+
+    Page<JobPosting> findByEndDateBetween(LocalDateTime startDate, LocalDateTime endDate, Pageable pageable);
+
+    Page<JobPosting> findByStartDateGreaterThanEqualAndEndDateLessThanEqual(
+            LocalDateTime startDate, LocalDateTime endDate, Pageable pageable);
 }

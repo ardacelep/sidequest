@@ -1,9 +1,9 @@
 package com.tablefour.sidequest.business.abstracts;
 
 import com.tablefour.sidequest.core.results.BaseResponse;
+import com.tablefour.sidequest.core.results.PageResponse;
 import com.tablefour.sidequest.entities.JobApplication;
 import com.tablefour.sidequest.entities.dtos.JobApplicationRequest;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 
@@ -14,10 +14,10 @@ public interface JobApplicationService {
 
     ResponseEntity<BaseResponse<JobApplication>> getApplicationById(UUID id);
 
-    ResponseEntity<BaseResponse<Page<JobApplication>>> getApplicationsByJobPosting(UUID jobPostingId,
+    ResponseEntity<PageResponse<JobApplication>> getApplicationsByJobPosting(UUID jobPostingId,
             Pageable pageable);
 
-    ResponseEntity<BaseResponse<Page<JobApplication>>> getApplicationsByApplicant(UUID applicantId, Pageable pageable);
+    ResponseEntity<PageResponse<JobApplication>> getApplicationsByApplicant(UUID applicantId, Pageable pageable);
 
     ResponseEntity<BaseResponse<JobApplication>> acceptApplication(UUID applicationId);
 

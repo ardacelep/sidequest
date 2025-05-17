@@ -2,13 +2,14 @@ package com.tablefour.sidequest.controllers;
 
 import com.tablefour.sidequest.business.abstracts.JobPostingService;
 import com.tablefour.sidequest.core.results.BaseResponse;
-import com.tablefour.sidequest.entities.JobPosting;
+import com.tablefour.sidequest.core.results.PageResponse;
 import com.tablefour.sidequest.entities.dtos.CreateJobPostingRequest;
+import com.tablefour.sidequest.entities.dtos.JobPostingDateSearchRequest;
+import com.tablefour.sidequest.entities.dtos.JobPostingDto;
 import com.tablefour.sidequest.entities.enums.JobCategory;
 import com.tablefour.sidequest.entities.enums.JobStatus;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -25,48 +26,48 @@ public class JobPostingController {
 
     @PostMapping
     @PreAuthorize("hasRole('EMPLOYER')")
-    public ResponseEntity<BaseResponse<JobPosting>> createJobPosting(
+    public ResponseEntity<BaseResponse<JobPostingDto>> createJobPosting(
             @Valid @RequestBody CreateJobPostingRequest request) {
         return jobPostingService.createJobPosting(request);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<BaseResponse<JobPosting>> getJobPostingById(@PathVariable UUID id) {
+    public ResponseEntity<BaseResponse<JobPostingDto>> getJobPostingById(@PathVariable UUID id) {
         return jobPostingService.getJobPostingById(id);
     }
 
     @GetMapping
-    public ResponseEntity<BaseResponse<Page<JobPosting>>> getAllActiveJobPostings(Pageable pageable) {
+    public ResponseEntity<PageResponse<JobPostingDto>> getAllActiveJobPostings(Pageable pageable) {
         return jobPostingService.getAllActiveJobPostings(pageable);
     }
 
     @GetMapping("/category/{category}")
-    public ResponseEntity<BaseResponse<Page<JobPosting>>> getJobPostingsByCategory(
+    public ResponseEntity<PageResponse<JobPostingDto>> getJobPostingsByCategory(
             @PathVariable JobCategory category, Pageable pageable) {
         return jobPostingService.getJobPostingsByCategory(category, pageable);
     }
 
     @GetMapping("/employer/{employerId}")
-    public ResponseEntity<BaseResponse<Page<JobPosting>>> getJobPostingsByEmployer(
+    public ResponseEntity<PageResponse<JobPostingDto>> getJobPostingsByEmployer(
             @PathVariable UUID employerId, Pageable pageable) {
         return jobPostingService.getJobPostingsByEmployer(employerId, pageable);
     }
 
     @PutMapping("/{id}/status")
     @PreAuthorize("hasRole('EMPLOYER')")
-    public ResponseEntity<BaseResponse<JobPosting>> updateJobStatus(
+    public ResponseEntity<BaseResponse<JobPostingDto>> updateJobStatus(
             @PathVariable UUID id, @RequestParam JobStatus newStatus) {
         return jobPostingService.updateJobStatus(id, newStatus);
     }
 
     @PutMapping("/{id}/deactivate")
     @PreAuthorize("hasRole('EMPLOYER')")
-    public ResponseEntity<BaseResponse<JobPosting>> deactivateJobPosting(@PathVariable UUID id) {
+    public ResponseEntity<BaseResponse<JobPostingDto>> deactivateJobPosting(@PathVariable UUID id) {
         return jobPostingService.deactivateJobPosting(id);
     }
 
     @GetMapping("/search")
-    public ResponseEntity<BaseResponse<Page<JobPosting>>> searchJobPostings(
+    public ResponseEntity<PageResponse<JobPostingDto>> searchJobPostings(
             @RequestParam(required = false) String location,
             @RequestParam(required = false) Double minPayment,
             @RequestParam(required = false) JobCategory category,
@@ -83,8 +84,20 @@ public class JobPostingController {
 
     @PutMapping("/{jobId}/assign/{employeeId}")
     @PreAuthorize("hasRole('EMPLOYER')")
-    public ResponseEntity<BaseResponse<JobPosting>> assignEmployee(
+    public ResponseEntity<BaseResponse<JobPostingDto>> assignEmployee(
             @PathVariable UUID jobId, @PathVariable UUID employeeId) {
         return jobPostingService.assignEmployee(jobId, employeeId);
+    }
+
+    @GetMapping("/search/keyword")
+    public ResponseEntity<PageResponse<JobPostingDto>> searchJobPostingsByKeyword(
+            @RequestParam String keyword, Pageable pageable) {
+        return jobPostingService.searchJobPostingsByKeyword(keyword, pageable);
+    }
+
+    @PostMapping("/search/date")
+    public ResponseEntity<PageResponse<JobPostingDto>> searchJobPostingsByDate(
+            @Valid @RequestBody JobPostingDateSearchRequest request, Pageable pageable) {
+        return jobPostingService.searchJobPostingsByDate(request, pageable);
     }
 }

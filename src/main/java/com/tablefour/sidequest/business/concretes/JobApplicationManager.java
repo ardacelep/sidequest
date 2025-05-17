@@ -7,6 +7,7 @@ import com.tablefour.sidequest.core.exception.RuntimeBaseException;
 import com.tablefour.sidequest.core.results.BaseResponse;
 import com.tablefour.sidequest.core.results.BaseResponseHelpers;
 import com.tablefour.sidequest.core.results.MessageType;
+import com.tablefour.sidequest.core.results.PageResponse;
 import com.tablefour.sidequest.dataAccess.JobApplicationDao;
 import com.tablefour.sidequest.entities.JobApplication;
 import com.tablefour.sidequest.entities.JobPosting;
@@ -21,6 +22,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.context.request.ServletWebRequest;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -40,16 +42,15 @@ public class JobApplicationManager implements JobApplicationService {
     public ResponseEntity<BaseResponse<JobApplication>> applyForJob(JobApplicationRequest request) {
         UserEmployee currentUser = (UserEmployee) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
-        ResponseEntity<BaseResponse<JobPosting>> jobPostingResponse = jobPostingService
-                .getJobPostingById(request.getJobPostingId());
-        if (jobPostingResponse.getStatusCode() != HttpStatus.OK) {
+        Optional<JobPosting> jobPostingOptional = jobPostingService.getJobPostingEntityById(request.getJobPostingId());
+        if (jobPostingOptional.isEmpty()) {
             throw new RuntimeBaseException(
                     ErrorMessageType.NO_RECORD_EXISTS,
                     "Job posting not found",
                     HttpStatus.NOT_FOUND);
         }
 
-        JobPosting jobPosting = jobPostingResponse.getBody().getData().get("jobPosting");
+        JobPosting jobPosting = jobPostingOptional.get();
 
         if (jobApplicationDao.existsByJobPostingAndApplicant(jobPosting, currentUser)) {
             throw new RuntimeBaseException(
@@ -67,12 +68,14 @@ public class JobApplicationManager implements JobApplicationService {
                 .build();
 
         JobApplication savedApplication = jobApplicationDao.save(jobApplication);
+
         BaseResponse<JobApplication> response = baseResponseHelpers.createBaseResponse(
                 HttpStatus.CREATED,
                 MessageType.CREATED,
                 "Application submitted successfully",
                 webRequest,
                 savedApplication);
+
         return ResponseEntity.status(response.getHttpStatus()).body(response);
     }
 
@@ -97,40 +100,47 @@ public class JobApplicationManager implements JobApplicationService {
     }
 
     @Override
-    public ResponseEntity<BaseResponse<Page<JobApplication>>> getApplicationsByJobPosting(UUID jobPostingId,
+    public ResponseEntity<PageResponse<JobApplication>> getApplicationsByJobPosting(UUID jobPostingId,
             Pageable pageable) {
-        ResponseEntity<BaseResponse<JobPosting>> jobPostingResponse = jobPostingService.getJobPostingById(jobPostingId);
-        if (jobPostingResponse.getStatusCode() != HttpStatus.OK) {
+        Optional<JobPosting> jobPostingOptional = jobPostingService.getJobPostingEntityById(jobPostingId);
+        if (jobPostingOptional.isEmpty()) {
             throw new RuntimeBaseException(
                     ErrorMessageType.NO_RECORD_EXISTS,
                     "Job posting not found",
                     HttpStatus.NOT_FOUND);
         }
 
-        JobPosting jobPosting = jobPostingResponse.getBody().getData().get("jobPosting");
-        Page<JobApplication> applications = jobApplicationDao.findByJobPosting(jobPosting, pageable);
+        Page<JobApplication> applications = jobApplicationDao.findByJobPosting(jobPostingOptional.get(), pageable);
 
-        BaseResponse<Page<JobApplication>> response = baseResponseHelpers.createBaseResponse(
+        PageResponse<JobApplication> response = PageResponse.of(
+                applications,
                 HttpStatus.OK,
                 MessageType.FOUND,
                 "Applications retrieved successfully",
-                webRequest,
-                applications);
+                baseResponseHelpers.getHostName(),
+                webRequest.getDescription(false).substring(4),
+                webRequest instanceof ServletWebRequest ? ((ServletWebRequest) webRequest).getRequest().getMethod()
+                        : "GET");
+
         return ResponseEntity.status(response.getHttpStatus()).body(response);
     }
 
     @Override
-    public ResponseEntity<BaseResponse<Page<JobApplication>>> getApplicationsByApplicant(UUID applicantId,
+    public ResponseEntity<PageResponse<JobApplication>> getApplicationsByApplicant(UUID applicantId,
             Pageable pageable) {
         UserEmployee applicant = (UserEmployee) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Page<JobApplication> applications = jobApplicationDao.findByApplicant(applicant, pageable);
 
-        BaseResponse<Page<JobApplication>> response = baseResponseHelpers.createBaseResponse(
+        PageResponse<JobApplication> response = PageResponse.of(
+                applications,
                 HttpStatus.OK,
                 MessageType.FOUND,
                 "Applications retrieved successfully",
-                webRequest,
-                applications);
+                baseResponseHelpers.getHostName(),
+                webRequest.getDescription(false).substring(4),
+                webRequest instanceof ServletWebRequest ? ((ServletWebRequest) webRequest).getRequest().getMethod()
+                        : "GET");
+
         return ResponseEntity.status(response.getHttpStatus()).body(response);
     }
 

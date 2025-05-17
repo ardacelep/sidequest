@@ -51,7 +51,7 @@ public class JobPosting {
     @CreationTimestamp
     private LocalDateTime createdAt;
 
-    private double aiTrustScore;
+    private double aiRecommendation;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

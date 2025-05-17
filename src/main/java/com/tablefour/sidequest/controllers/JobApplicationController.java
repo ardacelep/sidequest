@@ -2,11 +2,11 @@ package com.tablefour.sidequest.controllers;
 
 import com.tablefour.sidequest.business.abstracts.JobApplicationService;
 import com.tablefour.sidequest.core.results.BaseResponse;
+import com.tablefour.sidequest.core.results.PageResponse;
 import com.tablefour.sidequest.entities.JobApplication;
 import com.tablefour.sidequest.entities.dtos.JobApplicationRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -34,14 +34,14 @@ public class JobApplicationController {
 
     @GetMapping("/job/{jobPostingId}")
     @PreAuthorize("hasRole('EMPLOYER')")
-    public ResponseEntity<BaseResponse<Page<JobApplication>>> getApplicationsByJobPosting(
+    public ResponseEntity<PageResponse<JobApplication>> getApplicationsByJobPosting(
             @PathVariable UUID jobPostingId, Pageable pageable) {
         return jobApplicationService.getApplicationsByJobPosting(jobPostingId, pageable);
     }
 
     @GetMapping("/applicant/{applicantId}")
     @PreAuthorize("hasRole('EMPLOYEE')")
-    public ResponseEntity<BaseResponse<Page<JobApplication>>> getApplicationsByApplicant(
+    public ResponseEntity<PageResponse<JobApplication>> getApplicationsByApplicant(
             @PathVariable UUID applicantId, Pageable pageable) {
         return jobApplicationService.getApplicationsByApplicant(applicantId, pageable);
     }

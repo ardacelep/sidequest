@@ -1,16 +1,10 @@
 package com.tablefour.sidequest.entities.enums;
 
 public enum JobCategory {
-    WAITER("Garsonluk"),
-    DELIVERY("Dağıtım"),
-    CLEANING("Temizlik"),
-    SECURITY("Güvenlik"),
-    SALES("Satış"),
-    CUSTOMER_SERVICE("Müşteri Hizmetleri"),
-    OFFICE_WORK("Ofis İşleri"),
-    EDUCATION("Eğitim"),
-    TECHNICAL("Teknik"),
-    OTHER("Diğer");
+    DRIVER_AND_DELIVERY("Şoförlük & Teslimat"),
+    OFFICE_WORK("Ofis işleri"),
+    EVENT_STAFF("Etkinlik Görevlisi"),
+    SERVICE_STAFF("Servis Personeli");
 
     private final String value;
 
