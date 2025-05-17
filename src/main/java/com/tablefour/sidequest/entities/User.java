@@ -1,56 +1,34 @@
 package com.tablefour.sidequest.entities;
 
+import com.tablefour.sidequest.entities.enums.Role;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import org.hibernate.annotations.Formula;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.Set;
 import java.util.UUID;
-import com.tablefour.sidequest.entities.enums.Role;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Inheritance(strategy = InheritanceType.JOINED)
 @Entity
 @Builder
 @Table(name = "users")
 public class User implements UserDetails {
 
     @Id
-    @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "first_name")
     private String firstName;
-
-    @Column(name = "last_name")
     private String lastName;
-
-    @Column(name = "password")
     private String password;
-
-    @Column(name = "phone_number")
     private String phoneNumber;
-
-    @Column(name = "university")
-    private String university;
-
-    @Column(name = "faculty")
-    private String faculty;
-
-    @Column(name = "department")
-    private String department;
-
-    @Column(name = "email")
     private String email;
-
-    @Column(name = "birth_date")
-    private LocalDate birthDate;
 
     @ElementCollection(targetClass = Role.class, fetch = FetchType.EAGER)
     @JoinTable(name = "authorities", joinColumns = @JoinColumn(name = "user_id"))
@@ -58,9 +36,34 @@ public class User implements UserDetails {
     @Enumerated(EnumType.STRING)
     private Set<Role> authorities;
 
+    private LocalDate restrictedUntil = LocalDate.now();
+
+    @Override
+    public Collection<Role> getAuthorities() {
+        return this.authorities;
+    }
+
+    @Override
     public String getUsername() {
         return email;
     }
 
+    public boolean isRestricted(){
+        return restrictedUntil.isAfter(LocalDate.now());
+    }
 
+    @OneToMany(mappedBy = "ratedUser", cascade = CascadeType.ALL)
+    private Set<Rating> receivedRatings;
+
+    @OneToMany(mappedBy = "raterUser", cascade = CascadeType.ALL)
+    private Set<Rating> givenRatings;
+
+    @Formula("(SELECT AVG(r.value) FROM ratings r WHERE r.rated_user_id = user_id)")
+    private float rating;
+
+
+    @Override public boolean isAccountNonExpired() { return true; }
+    @Override public boolean isAccountNonLocked() { return true; }
+    @Override public boolean isCredentialsNonExpired() { return true; }
+    @Override public boolean isEnabled() { return true; }
 }
