@@ -8,7 +8,9 @@ import com.tablefour.sidequest.dataAccess.UserDao;
 import com.tablefour.sidequest.dataAccess.UserEmployeeDao;
 import com.tablefour.sidequest.dataAccess.UserEmployerDao;
 import com.tablefour.sidequest.entities.UserEmployee;
+import com.tablefour.sidequest.entities.UserEmployer;
 import com.tablefour.sidequest.entities.dtos.GetUserEmployeeDto;
+import com.tablefour.sidequest.entities.dtos.GetUserEmployerDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.http.HttpStatus;
@@ -78,8 +80,19 @@ public class AuthManager implements AuthService {
 
         GetUserEmployeeDto getUserEmployeeDto = new GetUserEmployeeDto();
 
-        BeanUtils.copyProperties(userEmployeeDao.save(userEmployee), getUserEmployeeDto);
+        userEmployee.setPassword(passwordEncoder.encode(userEmployee.getPassword()));
+
+        BeanUtils.copyProperties(userEmployee, getUserEmployeeDto);
 
         return getUserEmployeeDto;
+    }
+
+    @Override
+    public GetUserEmployerDto registerUserEmployer(UserEmployer userEmployer) {
+
+        GetUserEmployerDto getUserEmployerDto = new GetUserEmployerDto();
+        userEmployer.setPassword(passwordEncoder.encode(userEmployer.getPassword()));
+        BeanUtils.copyProperties(userEmployer, getUserEmployerDto);
+        return getUserEmployerDto;
     }
 }

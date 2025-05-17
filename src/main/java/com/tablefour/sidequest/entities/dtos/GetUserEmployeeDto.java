@@ -1,5 +1,7 @@
 package com.tablefour.sidequest.entities.dtos;
 
+import com.tablefour.sidequest.entities.Rating;
+import com.tablefour.sidequest.entities.enums.Gender;
 import com.tablefour.sidequest.entities.enums.Role;
 import lombok.*;
 
@@ -25,7 +27,11 @@ public class GetUserEmployeeDto {
     private float rating;
     private int completedJobs;
 
+    private Gender gender;
+
     private Set<Role> authorities;
 
     private boolean isRestricted;
+
+    private Set<Rating> receivedRatings;
 }

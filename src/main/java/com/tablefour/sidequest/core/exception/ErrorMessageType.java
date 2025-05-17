@@ -20,7 +20,8 @@ public enum ErrorMessageType {
     RESOURCE_NOT_FOUND("RESOURCE_NOT_FOUND","There is no such endpoint."),
     MAIL_ERROR("MAIL_ERROR","An error occurred while sending the email."),
     INVALID_TOKEN("INVALID_TOKEN","The token is not valid."),
-    EXPIRED_TOKEN("EXPIRED_TOKEN","The token is expired."),;
+    EXPIRED_TOKEN("EXPIRED_TOKEN","The token is expired."),
+    INVALID_CREDENTIALS("INVALID_CREDENTIALS","The credentials are not valid."),;
 
 
 

@@ -15,7 +15,11 @@ import java.util.Set;
 public class UserEmployer extends User {
 
     private String companyName;
+
+    @Column(columnDefinition = "TEXT")
     private String companyDescription;
+
+    private int givenJobs = 0;
 
     @PrePersist
     public void assignEmployerRole() {

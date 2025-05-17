@@ -5,20 +5,21 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDate;
-
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class AddUserEmployeeDto {
+public class AddUserEmployerDto {
+
     private String id_card_number;
     private String firstName;
     private String lastName;
     private String password;
     private String phoneNumber;
     private String email;
-    private String university;
-    private LocalDate birthDate;
+    private String companyName;
+    private String companyDescription;
     private String gender;
+
+
 }

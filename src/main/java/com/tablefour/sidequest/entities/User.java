@@ -1,5 +1,6 @@
 package com.tablefour.sidequest.entities;
 
+import com.tablefour.sidequest.entities.enums.Gender;
 import com.tablefour.sidequest.entities.enums.Role;
 import jakarta.persistence.*;
 import lombok.*;
@@ -24,11 +25,15 @@ public class User implements UserDetails {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    private String id_card_number;
     private String firstName;
     private String lastName;
     private String password;
     private String phoneNumber;
     private String email;
+
+    private Gender gender;
+
 
     @ElementCollection(targetClass = Role.class, fetch = FetchType.EAGER)
     @JoinTable(name = "authorities", joinColumns = @JoinColumn(name = "user_id"))
