@@ -66,6 +66,7 @@ public class JobPostingManager implements JobPostingService {
                                 .employer(currentUser)
                                 .status(JobStatus.OPEN)
                                 .isActive(true)
+                                .createdAt(LocalDateTime.now())
                                 .build();
 
                 JobPosting savedJobPosting = jobPostingDao.save(jobPosting);
@@ -195,6 +196,14 @@ public class JobPostingManager implements JobPostingService {
 
                 JobPosting jobPosting = jobPostingOptional.get();
                 verifyJobPostingOwnership(jobPosting);
+
+                // If the new status is COMPLETED, increment the employer's givenJobs counter
+                if (newStatus == JobStatus.COMPLETED) {
+                        UserEmployer employer = jobPosting.getEmployer();
+                        employer.setGivenJobs(employer.getGivenJobs() + 1);
+                        // The employer will be automatically saved due to @Transactional
+                }
+
                 jobPosting.setStatus(newStatus);
                 JobPosting updatedPosting = jobPostingDao.save(jobPosting);
                 JobPostingDto dto = JobPostingMapper.toDto(updatedPosting);

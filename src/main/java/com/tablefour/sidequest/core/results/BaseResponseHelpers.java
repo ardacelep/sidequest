@@ -14,7 +14,8 @@ import java.util.List;
 @Component
 public class BaseResponseHelpers {
 
-    public <D> BaseResponse<D> createBaseResponse(HttpStatus httpStatus, MessageType messageType, String message, WebRequest webRequest, D data) {
+    public <D> BaseResponse<D> createBaseResponse(HttpStatus httpStatus, MessageType messageType, String message,
+            WebRequest webRequest, D data) {
         BaseResponse<D> response = new BaseResponse<>();
 
         response.setHttpStatus(httpStatus);
@@ -25,10 +26,13 @@ public class BaseResponseHelpers {
         response.setPath(webRequest.getDescription(false).substring(4));
         response.setMessage(message);
 
-        if (webRequest instanceof ServletWebRequest servletWebRequest) {
-            HttpServletRequest request = servletWebRequest.getRequest();
-            String methodType = request.getMethod(); // GET, POST, PATCH vb.
-            response.setRequestType(methodType);
+        // Always try to get the request type from ServletWebRequest
+        if (webRequest instanceof ServletWebRequest) {
+            ServletWebRequest servletWebRequest = (ServletWebRequest) webRequest;
+            response.setRequestType(servletWebRequest.getHttpMethod().name());
+        } else {
+            // Fallback to GET if not a ServletWebRequest
+            response.setRequestType("GET");
         }
 
         if (data != null) {
@@ -37,7 +41,6 @@ public class BaseResponseHelpers {
         }
 
         return response;
-
     }
 
     // Sınıf adını küçük harfle başlatıp key olarak kullanmak için
@@ -52,27 +55,22 @@ public class BaseResponseHelpers {
         return Character.toLowerCase(simpleName.charAt(0)) + simpleName.substring(1); // -> userDto
     }
 
-    public BaseResponse<Void> createBaseResponse(HttpStatus httpStatus, MessageType messageType, String message, WebRequest webRequest) {
-        return createBaseResponse(httpStatus, messageType, message, webRequest,null);
+    public BaseResponse<Void> createBaseResponse(HttpStatus httpStatus, MessageType messageType, String message,
+            WebRequest webRequest) {
+        return createBaseResponse(httpStatus, messageType, message, webRequest, null);
     }
 
     public String getHostName() {
         try {
             return InetAddress.getLocalHost().getHostName();
-
-
         } catch (UnknownHostException e) {
             System.out.println("hata oluştu " + e.getMessage());
         }
-
         return null;
-
     }
 
     public List<String> addMapValue(List<String> list, String newValue) {
         list.add(newValue);
         return list;
     }
-
-
 }
