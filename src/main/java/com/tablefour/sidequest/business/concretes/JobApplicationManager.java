@@ -12,6 +12,7 @@ import com.tablefour.sidequest.dataAccess.JobApplicationDao;
 import com.tablefour.sidequest.entities.JobApplication;
 import com.tablefour.sidequest.entities.JobPosting;
 import com.tablefour.sidequest.entities.UserEmployee;
+import com.tablefour.sidequest.entities.UserEmployer;
 import com.tablefour.sidequest.entities.dtos.JobApplicationRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -144,15 +145,39 @@ public class JobApplicationManager implements JobApplicationService {
         return ResponseEntity.status(response.getHttpStatus()).body(response);
     }
 
+    private void verifyApplicantOwnership(JobApplication application) {
+        UserEmployee currentUser = (UserEmployee) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (!application.getApplicant().getId().equals(currentUser.getId())) {
+            throw new RuntimeBaseException(
+                    ErrorMessageType.ERROR,
+                    "You are not authorized to modify this application",
+                    HttpStatus.FORBIDDEN);
+        }
+    }
+
+    private void verifyEmployerOwnership(JobApplication application) {
+        UserEmployer currentUser = (UserEmployer) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (!application.getJobPosting().getEmployer().getId().equals(currentUser.getId())) {
+            throw new RuntimeBaseException(
+                    ErrorMessageType.ERROR,
+                    "You are not authorized to modify this application",
+                    HttpStatus.FORBIDDEN);
+        }
+    }
+
     @Override
     @Transactional
-    public ResponseEntity<BaseResponse<JobApplication>> acceptApplication(UUID applicationId) {
-        ResponseEntity<BaseResponse<JobApplication>> applicationResponse = getApplicationById(applicationId);
-        if (applicationResponse.getStatusCode() != HttpStatus.OK) {
-            return applicationResponse;
+    public ResponseEntity<BaseResponse<JobApplication>> acceptApplication(UUID id) {
+        Optional<JobApplication> applicationOptional = jobApplicationDao.findById(id);
+        if (applicationOptional.isEmpty()) {
+            throw new RuntimeBaseException(
+                    ErrorMessageType.NO_RECORD_EXISTS,
+                    "Application not found",
+                    HttpStatus.NOT_FOUND);
         }
 
-        JobApplication application = applicationResponse.getBody().getData().get("application");
+        JobApplication application = applicationOptional.get();
+        verifyEmployerOwnership(application);
         application.setAccepted(true);
         application.setRespondedAt(LocalDateTime.now());
         JobApplication savedApplication = jobApplicationDao.save(application);
@@ -168,13 +193,17 @@ public class JobApplicationManager implements JobApplicationService {
 
     @Override
     @Transactional
-    public ResponseEntity<BaseResponse<JobApplication>> rejectApplication(UUID applicationId, String reason) {
-        ResponseEntity<BaseResponse<JobApplication>> applicationResponse = getApplicationById(applicationId);
-        if (applicationResponse.getStatusCode() != HttpStatus.OK) {
-            return applicationResponse;
+    public ResponseEntity<BaseResponse<JobApplication>> rejectApplication(UUID id, String reason) {
+        Optional<JobApplication> applicationOptional = jobApplicationDao.findById(id);
+        if (applicationOptional.isEmpty()) {
+            throw new RuntimeBaseException(
+                    ErrorMessageType.NO_RECORD_EXISTS,
+                    "Application not found",
+                    HttpStatus.NOT_FOUND);
         }
 
-        JobApplication application = applicationResponse.getBody().getData().get("application");
+        JobApplication application = applicationOptional.get();
+        verifyEmployerOwnership(application);
         application.setAccepted(false);
         application.setRejectionReason(reason);
         application.setRespondedAt(LocalDateTime.now());
@@ -191,19 +220,18 @@ public class JobApplicationManager implements JobApplicationService {
 
     @Override
     @Transactional
-    public ResponseEntity<BaseResponse<Void>> withdrawApplication(UUID applicationId) {
-        ResponseEntity<BaseResponse<JobApplication>> applicationResponse = getApplicationById(applicationId);
-        if (applicationResponse.getStatusCode() != HttpStatus.OK) {
-            BaseResponse<Void> errorResponse = baseResponseHelpers.createBaseResponse(
-                    applicationResponse.getBody().getHttpStatus(),
-                    applicationResponse.getBody().getMessageType(),
-                    applicationResponse.getBody().getMessage(),
-                    webRequest,
-                    null);
-            return ResponseEntity.status(errorResponse.getHttpStatus()).body(errorResponse);
+    public ResponseEntity<BaseResponse<Void>> withdrawApplication(UUID id) {
+        Optional<JobApplication> applicationOptional = jobApplicationDao.findById(id);
+        if (applicationOptional.isEmpty()) {
+            throw new RuntimeBaseException(
+                    ErrorMessageType.NO_RECORD_EXISTS,
+                    "Application not found",
+                    HttpStatus.NOT_FOUND);
         }
 
-        jobApplicationDao.deleteById(applicationId);
+        JobApplication application = applicationOptional.get();
+        verifyApplicantOwnership(application);
+        jobApplicationDao.deleteById(id);
 
         BaseResponse<Void> response = baseResponseHelpers.createBaseResponse(
                 HttpStatus.OK,

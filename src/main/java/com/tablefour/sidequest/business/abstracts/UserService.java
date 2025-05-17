@@ -1,6 +1,5 @@
 package com.tablefour.sidequest.business.abstracts;
 
-import com.tablefour.sidequest.core.results.BaseResponse;
 import com.tablefour.sidequest.core.results.DataResult;
 import com.tablefour.sidequest.core.results.PageResponse;
 import com.tablefour.sidequest.core.results.Result;
@@ -10,7 +9,6 @@ import com.tablefour.sidequest.entities.UserEmployer;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import java.util.UUID;
 
 public interface UserService extends UserDetailsService {
 

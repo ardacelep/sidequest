@@ -14,7 +14,7 @@ public class AddUserEmployerDto {
 
     @NotBlank(message = "ID card number is required")
     @Pattern(regexp = "^[0-9]{11}$", message = "ID card number must be 11 digits")
-    private String id_card_number;
+    private String idCardNumber;
 
     @NotBlank(message = "First name is required")
     @Size(min = 2, max = 50, message = "First name must be between 2 and 50 characters")
@@ -26,7 +26,7 @@ public class AddUserEmployerDto {
 
     @NotBlank(message = "Password is required")
     @Size(min = 6, message = "Password must be at least 6 characters long")
-    @Pattern(regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=]).*$", message = "Password must contain at least one digit, one lowercase, one uppercase letter and one special character")
+    @Pattern(regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).*$", message = "Password must contain at least one digit, one lowercase and one uppercase letter")
     private String password;
 
     @NotBlank(message = "Phone number is required")

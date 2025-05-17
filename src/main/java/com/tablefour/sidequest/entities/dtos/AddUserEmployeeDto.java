@@ -27,7 +27,7 @@ public class AddUserEmployeeDto {
 
     @NotBlank(message = "Password is required")
     @Size(min = 6, message = "Password must be at least 6 characters long")
-    @Pattern(regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=]).*$", message = "Password must contain at least one digit, one lowercase, one uppercase letter and one special character")
+    @Pattern(regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).*$", message = "Password must contain at least one digit, one lowercase and one uppercase letter")
     private String password;
 
     @NotBlank(message = "Phone number is required")
@@ -47,6 +47,5 @@ public class AddUserEmployeeDto {
     private LocalDate birthDate;
 
     @NotBlank(message = "Gender is required")
-    @Pattern(regexp = "^(MALE|FEMALE|OTHER)$", message = "Gender must be MALE, FEMALE or OTHER")
     private String gender;
 }

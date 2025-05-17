@@ -27,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.context.request.ServletWebRequest;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -53,20 +54,26 @@ public class RatingManager implements RatingService {
                                         HttpStatus.NOT_FOUND);
                 }
 
-                // Check if job posting exists and is completed
-                ResponseEntity<BaseResponse<JobPostingDto>> jobPostingResponse = jobPostingService
-                                .getJobPostingById(request.getJobPostingId());
-                if (jobPostingResponse.getStatusCode() != HttpStatus.OK ||
-                                jobPostingResponse.getBody() == null ||
-                                jobPostingResponse.getBody().getData() == null ||
-                                !jobPostingResponse.getBody().getData().containsKey("jobPosting")) {
+                // Check if user has already rated for this job
+                if (ratingDao.existsByRaterUserAndJobPosting_Id(currentUser, request.getJobPostingId())) {
+                        throw new RuntimeBaseException(
+                                        ErrorMessageType.ERROR,
+                                        "You have already rated for this job",
+                                        HttpStatus.BAD_REQUEST);
+                }
+
+                // Get the actual JobPosting entity
+                Optional<JobPosting> jobPostingEntity = jobPostingService
+                                .getJobPostingEntityById(request.getJobPostingId());
+                if (jobPostingEntity.isEmpty()) {
                         throw new RuntimeBaseException(
                                         ErrorMessageType.NO_RECORD_EXISTS,
                                         "Job posting not found",
                                         HttpStatus.NOT_FOUND);
                 }
 
-                JobPostingDto jobPosting = jobPostingResponse.getBody().getData().get("jobPosting");
+                // Check if job is completed
+                JobPosting jobPosting = jobPostingEntity.get();
                 if (!JobStatus.COMPLETED.equals(jobPosting.getStatus())) {
                         throw new RuntimeBaseException(
                                         ErrorMessageType.ERROR,
@@ -74,18 +81,11 @@ public class RatingManager implements RatingService {
                                         HttpStatus.BAD_REQUEST);
                 }
 
-                // Check if user has already rated for this job
-                if (ratingDao.existsByRaterUserAndJobPostingId(currentUser, request.getJobPostingId())) {
-                        throw new RuntimeBaseException(
-                                        ErrorMessageType.ERROR,
-                                        "You have already rated for this job",
-                                        HttpStatus.BAD_REQUEST);
-                }
-
                 // Create and save the rating
                 Rating rating = Rating.builder()
                                 .ratedUser(ratedUserResult.getData())
                                 .raterUser(currentUser)
+                                .jobPosting(jobPosting)
                                 .value(request.getValue())
                                 .comment(request.getComment())
                                 .build();
@@ -194,25 +194,29 @@ public class RatingManager implements RatingService {
                 return ResponseEntity.status(response.getHttpStatus()).body(response);
         }
 
-        @Override
-        @Transactional
-        public ResponseEntity<BaseResponse<Void>> deleteRating(UUID id) {
+        private void verifyRatingOwnership(Rating rating) {
                 User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-
-                var rating = ratingDao.findById(id)
-                                .orElseThrow(() -> new RuntimeBaseException(
-                                                ErrorMessageType.NO_RECORD_EXISTS,
-                                                "Rating not found",
-                                                HttpStatus.NOT_FOUND));
-
-                // Only the rater can delete their rating
                 if (!rating.getRaterUser().getId().equals(currentUser.getId())) {
                         throw new RuntimeBaseException(
                                         ErrorMessageType.ERROR,
-                                        "You can only delete your own ratings",
+                                        "You are not authorized to modify this rating",
                                         HttpStatus.FORBIDDEN);
                 }
+        }
 
+        @Override
+        @Transactional
+        public ResponseEntity<BaseResponse<Void>> deleteRating(UUID id) {
+                Optional<Rating> ratingOptional = ratingDao.findById(id);
+                if (ratingOptional.isEmpty()) {
+                        throw new RuntimeBaseException(
+                                        ErrorMessageType.NO_RECORD_EXISTS,
+                                        "Rating not found",
+                                        HttpStatus.NOT_FOUND);
+                }
+
+                Rating rating = ratingOptional.get();
+                verifyRatingOwnership(rating);
                 ratingDao.deleteById(id);
 
                 BaseResponse<Void> response = baseResponseHelpers.createBaseResponse(

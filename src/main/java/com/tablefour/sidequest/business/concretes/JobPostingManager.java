@@ -171,19 +171,30 @@ public class JobPostingManager implements JobPostingService {
                 return ResponseEntity.status(response.getHttpStatus()).body(response);
         }
 
+        private void verifyJobPostingOwnership(JobPosting jobPosting) {
+                UserEmployer currentUser = (UserEmployer) SecurityContextHolder.getContext().getAuthentication()
+                                .getPrincipal();
+                if (!jobPosting.getEmployer().getId().equals(currentUser.getId())) {
+                        throw new RuntimeBaseException(
+                                        ErrorMessageType.ERROR,
+                                        "You are not authorized to modify this job posting",
+                                        HttpStatus.FORBIDDEN);
+                }
+        }
+
         @Override
         @Transactional
         public ResponseEntity<BaseResponse<JobPostingDto>> updateJobStatus(UUID id, JobStatus newStatus) {
-                ResponseEntity<BaseResponse<JobPostingDto>> jobPostingResponse = getJobPostingById(id);
-                if (jobPostingResponse.getStatusCode() != HttpStatus.OK) {
+                Optional<JobPosting> jobPostingOptional = jobPostingDao.findById(id);
+                if (jobPostingOptional.isEmpty()) {
                         throw new RuntimeBaseException(
                                         ErrorMessageType.NO_RECORD_EXISTS,
                                         "Job posting not found",
                                         HttpStatus.NOT_FOUND);
                 }
 
-                Optional<JobPosting> jobPostingOptional = jobPostingDao.findById(id);
                 JobPosting jobPosting = jobPostingOptional.get();
+                verifyJobPostingOwnership(jobPosting);
                 jobPosting.setStatus(newStatus);
                 JobPosting updatedPosting = jobPostingDao.save(jobPosting);
                 JobPostingDto dto = JobPostingMapper.toDto(updatedPosting);
@@ -200,16 +211,16 @@ public class JobPostingManager implements JobPostingService {
         @Override
         @Transactional
         public ResponseEntity<BaseResponse<JobPostingDto>> deactivateJobPosting(UUID id) {
-                ResponseEntity<BaseResponse<JobPostingDto>> jobPostingResponse = getJobPostingById(id);
-                if (jobPostingResponse.getStatusCode() != HttpStatus.OK) {
+                Optional<JobPosting> jobPostingOptional = jobPostingDao.findById(id);
+                if (jobPostingOptional.isEmpty()) {
                         throw new RuntimeBaseException(
                                         ErrorMessageType.NO_RECORD_EXISTS,
                                         "Job posting not found",
                                         HttpStatus.NOT_FOUND);
                 }
 
-                Optional<JobPosting> jobPostingOptional = jobPostingDao.findById(id);
                 JobPosting jobPosting = jobPostingOptional.get();
+                verifyJobPostingOwnership(jobPosting);
                 jobPosting.setActive(false);
                 JobPosting deactivatedPosting = jobPostingDao.save(jobPosting);
                 JobPostingDto dto = JobPostingMapper.toDto(deactivatedPosting);
@@ -224,40 +235,18 @@ public class JobPostingManager implements JobPostingService {
         }
 
         @Override
-        public ResponseEntity<PageResponse<JobPostingDto>> searchJobPostings(String location, Double minPayment,
-                        JobCategory category, Boolean isUrgent, Pageable pageable) {
-                if (location != null) {
-                        Page<JobPosting> searchResults = jobPostingDao.findByLocationContainingIgnoreCase(location,
-                                        pageable);
-                        Page<JobPostingDto> dtoPage = JobPostingMapper.toDtoPage(searchResults);
-
-                        PageResponse<JobPostingDto> response = PageResponse.of(
-                                        dtoPage,
-                                        HttpStatus.OK,
-                                        MessageType.FOUND,
-                                        "Search results retrieved",
-                                        baseResponseHelpers.getHostName(),
-                                        webRequest.getDescription(false).substring(4),
-                                        webRequest instanceof ServletWebRequest
-                                                        ? ((ServletWebRequest) webRequest).getRequest().getMethod()
-                                                        : "GET");
-
-                        return ResponseEntity.status(response.getHttpStatus()).body(response);
-                }
-                return getAllActiveJobPostings(pageable);
-        }
-
-        @Override
         @Transactional
         public ResponseEntity<BaseResponse<Void>> deleteJobPosting(UUID id) {
-                ResponseEntity<BaseResponse<JobPostingDto>> jobPostingResponse = getJobPostingById(id);
-                if (jobPostingResponse.getStatusCode() != HttpStatus.OK) {
+                Optional<JobPosting> jobPostingOptional = jobPostingDao.findById(id);
+                if (jobPostingOptional.isEmpty()) {
                         throw new RuntimeBaseException(
                                         ErrorMessageType.NO_RECORD_EXISTS,
                                         "Job posting not found",
                                         HttpStatus.NOT_FOUND);
                 }
 
+                JobPosting jobPosting = jobPostingOptional.get();
+                verifyJobPostingOwnership(jobPosting);
                 jobPostingDao.deleteById(id);
 
                 BaseResponse<Void> response = baseResponseHelpers.createBaseResponse(
@@ -379,5 +368,29 @@ public class JobPostingManager implements JobPostingService {
         @Override
         public Optional<JobPosting> getJobPostingEntityById(UUID id) {
                 return jobPostingDao.findById(id);
+        }
+
+        @Override
+        public ResponseEntity<PageResponse<JobPostingDto>> searchJobPostings(String location, Double minPayment,
+                        JobCategory category, Boolean isUrgent, Pageable pageable) {
+                if (location != null) {
+                        Page<JobPosting> searchResults = jobPostingDao.findByLocationContainingIgnoreCase(location,
+                                        pageable);
+                        Page<JobPostingDto> dtoPage = JobPostingMapper.toDtoPage(searchResults);
+
+                        PageResponse<JobPostingDto> response = PageResponse.of(
+                                        dtoPage,
+                                        HttpStatus.OK,
+                                        MessageType.FOUND,
+                                        "Search results retrieved",
+                                        baseResponseHelpers.getHostName(),
+                                        webRequest.getDescription(false).substring(4),
+                                        webRequest instanceof ServletWebRequest
+                                                        ? ((ServletWebRequest) webRequest).getRequest().getMethod()
+                                                        : "GET");
+
+                        return ResponseEntity.status(response.getHttpStatus()).body(response);
+                }
+                return getAllActiveJobPostings(pageable);
         }
 }

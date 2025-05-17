@@ -18,5 +18,5 @@ public interface RatingDao extends JpaRepository<Rating, UUID> {
     @Query("SELECT AVG(r.value) FROM Rating r WHERE r.ratedUser.id = :userId")
     Double getAverageRatingForUser(@Param("userId") UUID userId);
 
-    boolean existsByRaterUserAndJobPostingId(User raterUser, UUID jobPostingId);
+    boolean existsByRaterUserAndJobPosting_Id(User raterUser, UUID jobPostingId);
 }

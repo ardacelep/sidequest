@@ -32,6 +32,10 @@ public class Rating {
     @JoinColumn(name = "rater_user_id", nullable = false)
     private User raterUser; // Kim yaptı
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "job_posting_id", nullable = false)
+    private JobPosting jobPosting;
+
     private LocalDateTime createdAt;
 
     @PrePersist
@@ -39,4 +43,3 @@ public class Rating {
         this.createdAt = LocalDateTime.now();
     }
 }
-
