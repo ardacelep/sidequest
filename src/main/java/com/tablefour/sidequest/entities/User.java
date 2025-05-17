@@ -15,9 +15,9 @@ import java.util.UUID;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 @Inheritance(strategy = InheritanceType.JOINED)
 @Entity
-@Builder
 @Table(name = "users")
 public class User implements UserDetails {
 
@@ -41,6 +41,7 @@ public class User implements UserDetails {
     @Enumerated(EnumType.STRING)
     private Set<Role> authorities;
 
+    @Builder.Default
     private LocalDate restrictedUntil = LocalDate.now();
 
     @Override
