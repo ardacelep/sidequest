@@ -17,8 +17,8 @@ public class CreateRatingRequest {
     @NotNull(message = "Rated user ID is required")
     private UUID ratedUserId;
 
-    @NotNull(message = "Job posting ID is required")
-    private UUID jobPostingId;
+    @NotNull(message = "Job related to the rating is required")
+    private UUID jobPostingId; // Optional - only needed for job-related ratings
 
     @NotNull(message = "Rating value is required")
     @Min(value = 1, message = "Rating must be at least 1")

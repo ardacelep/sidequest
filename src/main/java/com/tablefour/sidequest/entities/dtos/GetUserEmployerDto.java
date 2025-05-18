@@ -15,7 +15,6 @@ import java.util.Set;
 @NoArgsConstructor
 public class GetUserEmployerDto {
 
-    private String id_card_number;
     private String firstName;
     private String lastName;
     private String phoneNumber;

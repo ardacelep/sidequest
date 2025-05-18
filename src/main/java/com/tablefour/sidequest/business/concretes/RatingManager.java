@@ -16,6 +16,7 @@ import com.tablefour.sidequest.entities.Rating;
 import com.tablefour.sidequest.entities.User;
 import com.tablefour.sidequest.entities.dtos.CreateRatingRequest;
 import com.tablefour.sidequest.entities.enums.JobStatus;
+import com.tablefour.sidequest.entities.enums.Role;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -54,14 +55,6 @@ public class RatingManager implements RatingService {
                                         HttpStatus.NOT_FOUND);
                 }
 
-                // Check if user has already rated for this job
-                if (ratingDao.existsByRaterUserAndJobPosting_Id(currentUser, request.getJobPostingId())) {
-                        throw new RuntimeBaseException(
-                                        ErrorMessageType.ERROR,
-                                        "You have already rated for this job",
-                                        HttpStatus.BAD_REQUEST);
-                }
-
                 // Get the actual JobPosting entity
                 Optional<JobPosting> jobPostingEntity = jobPostingService
                                 .getJobPostingEntityById(request.getJobPostingId());
@@ -81,9 +74,21 @@ public class RatingManager implements RatingService {
                                         HttpStatus.BAD_REQUEST);
                 }
 
+                // Verify that the rater was involved in the job
+                User ratedUser = ratedUserResult.getData();
+                verifyUserInvolvedInJob(currentUser, ratedUser, jobPosting);
+
+                // Check if user has already rated for this job
+                if (ratingDao.existsByRaterUserAndJobPosting_Id(currentUser, request.getJobPostingId())) {
+                        throw new RuntimeBaseException(
+                                        ErrorMessageType.ERROR,
+                                        "You have already rated for this job",
+                                        HttpStatus.BAD_REQUEST);
+                }
+
                 // Create and save the rating
                 Rating rating = Rating.builder()
-                                .ratedUser(ratedUserResult.getData())
+                                .ratedUser(ratedUser)
                                 .raterUser(currentUser)
                                 .jobPosting(jobPosting)
                                 .value(request.getValue())
@@ -92,6 +97,12 @@ public class RatingManager implements RatingService {
 
                 Rating savedRating = ratingDao.save(rating);
 
+                // Update the user's average rating
+                Double newAverageRating = ratingDao.getAverageRatingForUser(ratedUser.getId());
+                if (newAverageRating == null) {
+                        newAverageRating = (double) request.getValue();
+                }
+
                 BaseResponse<Rating> response = baseResponseHelpers.createBaseResponse(
                                 HttpStatus.CREATED,
                                 MessageType.CREATED,
@@ -99,6 +110,66 @@ public class RatingManager implements RatingService {
                                 webRequest,
                                 savedRating);
                 return ResponseEntity.status(response.getHttpStatus()).body(response);
+        }
+
+        private void verifyUserInvolvedInJob(User rater, User rated, JobPosting jobPosting) {
+                boolean raterInvolved = false;
+                boolean ratedInvolved = false;
+
+                // Check if users are employer and employee
+                boolean raterIsEmployer = rater.getAuthorities().contains(Role.ROLE_EMPLOYER);
+                boolean raterIsEmployee = rater.getAuthorities().contains(Role.ROLE_EMPLOYEE);
+                boolean ratedIsEmployer = rated.getAuthorities().contains(Role.ROLE_EMPLOYER);
+                boolean ratedIsEmployee = rated.getAuthorities().contains(Role.ROLE_EMPLOYEE);
+
+                // If rater is employer
+                if (raterIsEmployer) {
+                        // Verify rater is the job's employer
+                        raterInvolved = rater.getId().equals(jobPosting.getEmployer().getId());
+                        // Verify rated is the assigned employee
+                        ratedInvolved = ratedIsEmployee
+                                        && rated.getId().equals(jobPosting.getAssignedEmployee().getId());
+
+                        if (!raterInvolved) {
+                                throw new RuntimeBaseException(
+                                                ErrorMessageType.ERROR,
+                                                "Only the employer who posted this job can rate",
+                                                HttpStatus.FORBIDDEN);
+                        }
+                        if (!ratedInvolved) {
+                                throw new RuntimeBaseException(
+                                                ErrorMessageType.ERROR,
+                                                "You can only rate the employee assigned to this job",
+                                                HttpStatus.FORBIDDEN);
+                        }
+                }
+                // If rater is employee
+                else if (raterIsEmployee) {
+                        // Verify rater is the assigned employee
+                        raterInvolved = rater.getId().equals(jobPosting.getAssignedEmployee().getId());
+                        // Verify rated is the job's employer
+                        ratedInvolved = ratedIsEmployer && rated.getId().equals(jobPosting.getEmployer().getId());
+
+                        if (!raterInvolved) {
+                                throw new RuntimeBaseException(
+                                                ErrorMessageType.ERROR,
+                                                "Only the assigned employee can rate this job",
+                                                HttpStatus.FORBIDDEN);
+                        }
+                        if (!ratedInvolved) {
+                                throw new RuntimeBaseException(
+                                                ErrorMessageType.ERROR,
+                                                "You can only rate the employer of this job",
+                                                HttpStatus.FORBIDDEN);
+                        }
+                }
+                // If neither employer nor employee
+                else {
+                        throw new RuntimeBaseException(
+                                        ErrorMessageType.ERROR,
+                                        "Only employers and employees can rate each other",
+                                        HttpStatus.FORBIDDEN);
+                }
         }
 
         @Override

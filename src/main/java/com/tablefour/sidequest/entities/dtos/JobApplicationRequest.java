@@ -13,6 +13,6 @@ public class JobApplicationRequest {
     private UUID jobPostingId;
 
     @NotBlank(message = "Cover letter is required")
-    @Size(min = 50, message = "Cover letter must be at least 50 characters")
+    @Size(min = 10, message = "Cover letter must be at least 50 characters")
     private String coverLetter;
 }

@@ -202,6 +202,20 @@ public class JobPostingManager implements JobPostingService {
                         UserEmployer employer = jobPosting.getEmployer();
                         employer.setGivenJobs(employer.getGivenJobs() + 1);
                         // The employer will be automatically saved due to @Transactional
+                        jobPosting.setActive(false);
+                }
+                else if (newStatus == JobStatus.CANCELLED) {
+                        jobPosting.setActive(false);
+                } else if (newStatus == JobStatus.OPEN) {
+                        jobPosting.setActive(true);
+                } else if (newStatus == JobStatus.FILLED) {
+                        jobPosting.setActive(false);
+                } else {
+                        throw new RuntimeBaseException(
+                                        ErrorMessageType.INVALID_REQUEST,
+                                        "Invalid job status",
+                                        HttpStatus.BAD_REQUEST);
+
                 }
 
                 jobPosting.setStatus(newStatus);
@@ -280,6 +294,10 @@ public class JobPostingManager implements JobPostingService {
 
                 Optional<JobPosting> jobPostingOptional = jobPostingDao.findById(jobId);
                 JobPosting jobPosting = jobPostingOptional.get();
+
+                // Verify ownership
+                verifyJobPostingOwnership(jobPosting);
+
                 DataResult<User> employeeResult = userService.getUserById(employeeId.toString());
 
                 if (!employeeResult.isSuccess()) {

@@ -49,7 +49,9 @@ public class JobApplicationController {
     @PutMapping("/{id}/accept")
     @PreAuthorize("hasRole('EMPLOYER')")
     public ResponseEntity<BaseResponse<JobApplication>> acceptApplication(@PathVariable UUID id) {
-        return jobApplicationService.acceptApplication(id);
+        var response = jobApplicationService.acceptApplication(id);
+        System.out.println("help");
+        return response;
     }
 
     @PutMapping("/{id}/reject")

@@ -9,11 +9,13 @@ import com.tablefour.sidequest.core.results.BaseResponseHelpers;
 import com.tablefour.sidequest.core.results.MessageType;
 import com.tablefour.sidequest.core.results.PageResponse;
 import com.tablefour.sidequest.dataAccess.JobApplicationDao;
+import com.tablefour.sidequest.dataAccess.JobPostingDao;
 import com.tablefour.sidequest.entities.JobApplication;
 import com.tablefour.sidequest.entities.JobPosting;
 import com.tablefour.sidequest.entities.UserEmployee;
 import com.tablefour.sidequest.entities.UserEmployer;
 import com.tablefour.sidequest.entities.dtos.JobApplicationRequest;
+import com.tablefour.sidequest.entities.enums.JobStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -34,6 +36,7 @@ import java.util.UUID;
 public class JobApplicationManager implements JobApplicationService {
 
     private final JobApplicationDao jobApplicationDao;
+    private final JobPostingDao jobPostingDao;
     private final JobPostingService jobPostingService;
     private final BaseResponseHelpers baseResponseHelpers;
     private final WebRequest webRequest;
@@ -82,7 +85,7 @@ public class JobApplicationManager implements JobApplicationService {
 
     @Override
     public ResponseEntity<BaseResponse<JobApplication>> getApplicationById(UUID id) {
-        Optional<JobApplication> applicationOptional = jobApplicationDao.findById(id);
+        Optional<JobApplication> applicationOptional = jobApplicationDao.findByIdWithJobPosting(id);
 
         if (applicationOptional.isEmpty()) {
             throw new RuntimeBaseException(
@@ -168,7 +171,7 @@ public class JobApplicationManager implements JobApplicationService {
     @Override
     @Transactional
     public ResponseEntity<BaseResponse<JobApplication>> acceptApplication(UUID id) {
-        Optional<JobApplication> applicationOptional = jobApplicationDao.findById(id);
+        Optional<JobApplication> applicationOptional = jobApplicationDao.findByIdWithJobPosting(id);
         if (applicationOptional.isEmpty()) {
             throw new RuntimeBaseException(
                     ErrorMessageType.NO_RECORD_EXISTS,
@@ -178,6 +181,14 @@ public class JobApplicationManager implements JobApplicationService {
 
         JobApplication application = applicationOptional.get();
         verifyEmployerOwnership(application);
+
+        // Update the job posting to assign the employee
+        JobPosting jobPosting = application.getJobPosting();
+        jobPosting.setAssignedEmployee(application.getApplicant());
+        jobPosting.setStatus(JobStatus.FILLED);
+        jobPostingDao.save(jobPosting);
+
+        // Update the application
         application.setAccepted(true);
         application.setRespondedAt(LocalDateTime.now());
         JobApplication savedApplication = jobApplicationDao.save(application);

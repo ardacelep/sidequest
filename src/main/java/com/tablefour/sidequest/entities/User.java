@@ -1,5 +1,6 @@
 package com.tablefour.sidequest.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.tablefour.sidequest.entities.enums.Gender;
 import com.tablefour.sidequest.entities.enums.Role;
 import jakarta.persistence.*;
@@ -28,7 +29,10 @@ public class User implements UserDetails {
     private String idCardNumber;
     private String firstName;
     private String lastName;
+
+    @JsonIgnore
     private String password;
+
     private String phoneNumber;
     private String email;
 
@@ -46,26 +50,18 @@ public class User implements UserDetails {
 
     @Override
     public Collection<Role> getAuthorities() {
-        return this.authorities;
+        return authorities;
+    }
+
+    @Override
+    public String getPassword() {
+        return password;
     }
 
     @Override
     public String getUsername() {
         return email;
     }
-
-    public boolean isRestricted() {
-        return restrictedUntil.isAfter(LocalDate.now());
-    }
-
-    @OneToMany(mappedBy = "ratedUser", cascade = CascadeType.ALL)
-    private Set<Rating> receivedRatings;
-
-    @OneToMany(mappedBy = "raterUser", cascade = CascadeType.ALL)
-    private Set<Rating> givenRatings;
-
-    @Formula("(SELECT COALESCE(AVG(r.value), 0.0) FROM application.ratings r WHERE r.rated_user_id = id)")
-    private double rating;
 
     @Override
     public boolean isAccountNonExpired() {
@@ -74,7 +70,7 @@ public class User implements UserDetails {
 
     @Override
     public boolean isAccountNonLocked() {
-        return true;
+        return !isRestricted();
     }
 
     @Override
@@ -86,4 +82,19 @@ public class User implements UserDetails {
     public boolean isEnabled() {
         return true;
     }
+
+    public boolean isRestricted() {
+        return restrictedUntil != null && restrictedUntil.isAfter(LocalDate.now());
+    }
+
+    @OneToMany(mappedBy = "ratedUser", cascade = CascadeType.ALL)
+    @JsonIgnore
+    private Set<Rating> receivedRatings;
+
+    @OneToMany(mappedBy = "raterUser", cascade = CascadeType.ALL)
+    @JsonIgnore
+    private Set<Rating> givenRatings;
+
+    @Formula("(SELECT COALESCE(AVG(r.value), 0.0) FROM application.ratings r WHERE r.rated_user_id = id)")
+    private double rating;
 }

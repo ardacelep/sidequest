@@ -20,17 +20,18 @@ public class JwtService {
     @Value("${jwt.secret}")
     private String SECRET;
 
-    public String generateToken(String email, Collection<? extends GrantedAuthority> role){
+    public String generateToken(String email, Collection<? extends GrantedAuthority> role) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("role", role);
         return createToken(claims, email);
     }
 
-    public Boolean validateToken(String token, UserDetails userDetails){
+    public Boolean validateToken(String token, UserDetails userDetails) {
         String email = extractUser(token);
         Date expirationDate = extractExpiration(token);
         return userDetails.getUsername().equals(email) && !expirationDate.before(new Date());
     }
+
     public Date extractExpiration(String token) {
         Claims claims = Jwts
                 .parser()
@@ -40,6 +41,7 @@ public class JwtService {
                 .getPayload();
         return claims.getExpiration();
     }
+
     public String extractUser(String token) {
         Claims claims = Jwts
                 .parser()
@@ -49,16 +51,18 @@ public class JwtService {
                 .getPayload();
         return claims.getSubject();
     }
+
     private String createToken(Map<String, Object> claims, String email) {
         var result = Jwts.builder()
                 .claims(claims)
                 .subject(email)
                 .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis()+ 1000 * 60 * 60 * 12)) //token 12 saat boyunca gecerli
+                .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 12)) // token 12 saat boyunca gecerli
                 .signWith(getSignKey())
                 .compact();
         return result;
     }
+
     private SecretKey getSignKey() {
         byte[] keyBytes = Decoders.BASE64.decode(SECRET);
         return Keys.hmacShaKeyFor(keyBytes);

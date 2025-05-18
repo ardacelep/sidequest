@@ -33,7 +33,7 @@ public class Rating {
     private User raterUser; // Kim yaptı
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "job_posting_id", nullable = false)
+    @JoinColumn(name = "job_posting_id")
     private JobPosting jobPosting;
 
     private LocalDateTime createdAt;
